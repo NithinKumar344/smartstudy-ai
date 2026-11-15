@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartStudy AI</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body><div class="shell">
+<aside class="sidebar"><a class="brand" href="{{ url_for('dashboard') if session.get('user_id') else url_for('login') }}"><span class="brand-icon">✦</span><span>SmartStudy <em>AI</em></span></a>
+{% if session.get('user_id') %}<div class="nav-label">WORKSPACE</div><a class="nav active" href="{{ url_for('dashboard') }}">▦ <span>Overview</span></a><a class="nav" href="#timetable">▤ <span>My timetable</span></a><a class="nav" href="#subjects">◈ <span>Subjects</span></a><a class="nav" href="#exams">◷ <span>Exam planner</span></a><a class="nav" href="#insights">✧ <span>AI insights</span></a>
+<div class="sidebar-bottom"><div class="user-mini"><div class="avatar">{{ session.get('name','S')[:1]|upper }}</div><div><b>{{ session.get('name') }}</b><small>Student account</small></div></div><form method="post" action="{{ url_for('logout') }}"><button class="logout">↪ Log out</button></form></div>{% endif %}</aside>
+<main class="main">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main></div><script src="{{ url_for('static',filename='app.js') }}"></script></body></html>
