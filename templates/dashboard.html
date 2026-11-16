@@ -1,14 +1,280 @@
-{% extends "base.html" %}{% block content %}
-<header class="topbar"><div><div class="eyebrow">STUDENT WORKSPACE / OVERVIEW</div><h1>Good to see you, {{ user['name'].split()[0] }} <span class="wave">✦</span></h1><p class="muted">Your learning journey, organised with intention.</p></div><div class="top-actions"><span class="today-pill">◷ {{ today }}</span><div class="avatar">{{ user['name'][:1]|upper }}</div></div></header>
-<section class="hero"><div><div class="hero-kicker">YOUR SMART STUDY SPACE</div><h2>Make every study session<br><span>count.</span></h2><p>Plan with clarity. Learn consistently. Track your progress.</p><form method="post" action="{{ url_for('generate') }}"><button class="hero-button">✧ Generate my timetable <span>→</span></button></form></div><div class="hero-orbit"><div class="orbit-ring"></div><div class="orbit-core">✦</div><div class="orbit-tag tag-one">FOCUS</div><div class="orbit-tag tag-two">GROW</div><div class="orbit-tag tag-three">REPEAT</div></div></section>
-<section class="stats-grid"><article class="stat-card"><div class="stat-head"><span>Study sessions</span><span class="stat-icon purple">▤</span></div><strong>{{ total }}</strong><small>Total scheduled</small></article><article class="stat-card"><div class="stat-head"><span>Completed</span><span class="stat-icon green">✓</span></div><strong>{{ done }}</strong><small>Sessions finished</small></article><article class="stat-card"><div class="stat-head"><span>Focus time</span><span class="stat-icon amber">◷</span></div><strong>{{ (minutes//60) }}h {{ minutes%60 }}m</strong><small>Completed study time</small></article><article class="stat-card"><div class="stat-head"><span>Upcoming exams</span><span class="stat-icon pink">⌁</span></div><strong>{{ upcoming }}</strong><small>On your calendar</small></article></section>
-<div class="content-grid">
-<section class="panel wide" id="timetable"><div class="panel-head"><div><div class="eyebrow">YOUR PLAN</div><h3>Upcoming study sessions</h3></div><span class="subtle-tag">Next 14 days</span></div>
-{% if sessions %}<div class="session-list">{% for s in sessions %}<div class="session-row"><div class="session-date"><b>{{ s['study_date'][8:10] }}</b><small>{{ s['study_date'][5:7] }}/{{ s['study_date'][:4] }}</small></div><div class="session-color" style="background:{{ s['color'] }}"></div><div class="session-info"><b>{{ s['subject_name'] }}</b><small>{{ s['start_time'] }} · {{ s['duration'] }} min</small></div><form method="post" action="{{ url_for('toggle_session',sid=s['id']) }}"><button class="complete {{ 'done' if s['completed'] else '' }}">{{ '✓ Done' if s['completed'] else 'Mark done' }}</button></form></div>{% endfor %}</div>{% else %}<div class="empty"><div>▤</div><b>Your timetable starts here</b><p>Add subjects, set your preferences and generate your first study plan.</p></div>{% endif %}</section>
-<section class="panel" id="subjects"><div class="panel-head"><div><div class="eyebrow">YOUR LEARNING</div><h3>Subjects</h3></div><span class="count">{{ subjects|length }}</span></div><form method="post" action="{{ url_for('add_subject') }}" class="compact-form"><input name="name" placeholder="Add a subject..." required><div class="form-row"><label>Difficulty<select name="difficulty"><option value="1">Easy</option><option value="3" selected>Medium</option><option value="5">Hard</option></select></label><label>Priority<select name="priority"><option value="1">Low</option><option value="3" selected>Medium</option><option value="5">High</option></select></label></div><button class="primary full">+ Add subject</button></form><div class="subject-list">{% for s in subjects %}<div class="subject-row"><span class="subject-dot" style="background:{{ s['color'] }}"></span><b>{{ s['name'] }}</b><small>D{{ s['difficulty'] }} · P{{ s['priority'] }}</small><form method="post" action="{{ url_for('delete_subject',sid=s['id']) }}"><button class="icon-button" title="Delete">×</button></form></div>{% else %}<p class="muted small">No subjects added yet.</p>{% endfor %}</div></section>
-<section class="panel" id="exams"><div class="panel-head"><div><div class="eyebrow">STAY PREPARED</div><h3>Exam countdown</h3></div></div><form method="post" action="{{ url_for('add_exam') }}" class="compact-form"><input name="title" placeholder="Exam name" required><div class="form-row"><select name="subject_id"><option value="">General</option>{% for s in subjects %}<option value="{{ s['id'] }}">{{ s['name'] }}</option>{% endfor %}</select><input type="date" name="exam_date" required></div><button class="secondary full">+ Add exam</button></form>{% for e in exams %}<div class="exam-row"><div><b>{{ e['title'] }}</b><small>{{ e['subject_name'] }} · {{ e['exam_date'] }}</small></div><span class="exam-date">{{ ((e['exam_date']|string)[:10]) }}</span></div>{% else %}<p class="muted small">Your upcoming exams will appear here.</p>{% endfor %}</section>
-<section class="panel" id="insights"><div class="panel-head"><div><div class="eyebrow">PERSONALISED GUIDANCE</div><h3>AI study insights</h3></div><span class="sparkle">✧</span></div><div id="recommendations" class="recommendations"><div class="loading-dot"></div><span class="muted">Analysing your study plan...</span></div><div class="progress-block"><div class="progress-label"><b>Session completion</b><strong>{{ progress }}%</strong></div><div class="progress-track"><span style="width:{{ progress }}%"></span></div></div><p class="disclaimer">Local rule-based recommendations using your subject and completion data. Connect an AI provider later for generative responses.</p></section>
+
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard">
+
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">SMARTSTUDY AI PRO / WORKSPACE</p>
+            <h1>Welcome back, {{ user['name'].split()[0] }} 👋</h1>
+            <p class="muted">Your personal academic command centre.</p>
+        </div>
+        <div class="top-actions">
+            <span class="today-pill">◷ {{ today }}</span>
+            <div class="avatar">{{ user['name'][:1]|upper }}</div>
+        </div>
+    </header>
+
+    <section class="hero-card">
+        <div>
+            <span class="eyebrow">YOUR STUDY JOURNEY</span>
+            <h2>Make every study session count.</h2>
+            <p>Plan smarter, stay consistent and achieve your academic goals.</p>
+            <form method="post" action="{{ url_for('generate') }}">
+                <button class="primary">✦ Generate My Timetable</button>
+            </form>
+        </div>
+        <div class="hero-icon">✦</div>
+    </section>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <span>Study Sessions</span>
+            <h2>{{ total }}</h2>
+            <small>Total planned sessions</small>
+        </div>
+        <div class="stat-card">
+            <span>Completed</span>
+            <h2>{{ done }}</h2>
+            <small>Sessions finished</small>
+        </div>
+        <div class="stat-card">
+            <span>Study Time</span>
+            <h2>{{ minutes // 60 }}h</h2>
+            <small>Hours completed</small>
+        </div>
+        <div class="stat-card">
+            <span>Upcoming Exams</span>
+            <h2>{{ upcoming }}</h2>
+            <small>Exams to prepare for</small>
+        </div>
+    </section>
+
+    <section class="content-grid">
+
+        <div class="panel timetable-panel" id="timetable">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">YOUR SCHEDULE</span>
+                    <h2>My Timetable</h2>
+                </div>
+                <span class="badge">{{ sessions|length }} Sessions</span>
+            </div>
+
+            {% if sessions %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sessions %}
+                        <tr>
+                            <td>{{ s['study_date'] }}</td>
+                            <td>{{ s['start_time'] }}</td>
+                            <td>
+                                <span class="subject-dot"
+                                      style="background:{{ s['color'] or '#7657ff' }}"></span>
+                                {{ s['subject_name'] or 'Study session' }}
+                            </td>
+                            <td>
+                                <form method="post"
+                                      action="{{ url_for('toggle_session', sid=s['id']) }}">
+                                    <button class="status-btn {{ 'done' if s['completed'] else '' }}">
+                                        {{ '✓ Done' if s['completed'] else 'Mark done' }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">▤</div>
+                <h3>Your timetable is waiting</h3>
+                <p>Add subjects and generate your first study schedule.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="panel progress-panel">
+            <span class="eyebrow">PERFORMANCE</span>
+            <h2>Study Progress</h2>
+
+            <div class="progress-circle"
+                 style="--progress: {{ progress }}%">
+                <div>
+                    <strong>{{ progress }}%</strong>
+                    <small>Completed</small>
+                </div>
+            </div>
+
+            <div class="progress-details">
+                <p><span>Completed sessions</span><strong>{{ done }}</strong></p>
+                <p><span>Remaining sessions</span><strong>{{ total - done }}</strong></p>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="content-grid">
+
+        <div class="panel" id="subjects">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">ACADEMIC MANAGEMENT</span>
+                    <h2>My Subjects</h2>
+                </div>
+                <span class="badge">{{ subjects|length }} Subjects</span>
+            </div>
+
+            <form method="post" action="{{ url_for('add_subject') }}"
+                  class="form-stack">
+                <label>Subject name</label>
+                <input type="text" name="name"
+                       placeholder="Example: Data Structures" required>
+
+                <label>Difficulty (1–5)</label>
+                <select name="difficulty">
+                    <option value="1">1 - Very Easy</option>
+                    <option value="2">2 - Easy</option>
+                    <option value="3" selected>3 - Medium</option>
+                    <option value="4">4 - Difficult</option>
+                    <option value="5">5 - Very Difficult</option>
+                </select>
+
+                <label>Priority (1–5)</label>
+                <select name="priority">
+                    <option value="1">1 - Low</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3 - Normal</option>
+                    <option value="4">4</option>
+                    <option value="5">5 - High</option>
+                </select>
+
+                <button class="primary">+ Add Subject</button>
+            </form>
+
+            <div class="subject-list">
+                {% for subject in subjects %}
+                <div class="subject-item">
+                    <div>
+                        <strong>{{ subject['name'] }}</strong>
+                        <small>Difficulty {{ subject['difficulty'] }}/5 · Priority {{ subject['priority'] }}/5</small>
+                    </div>
+                    <form method="post"
+                          action="{{ url_for('delete_subject', sid=subject['id']) }}"
+                          onsubmit="return confirm('Delete this subject?')">
+                        <button class="delete-btn">×</button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="muted">No subjects added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel" id="exams">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">EXAM PREPARATION</span>
+                    <h2>Exam Planner</h2>
+                </div>
+            </div>
+
+            <form method="post" action="{{ url_for('add_exam') }}"
+                  class="form-stack">
+                <label>Exam title</label>
+                <input type="text" name="title"
+                       placeholder="Example: Semester Examination" required>
+
+                <label>Subject</label>
+                <select name="subject_id" required>
+                    <option value="">Choose subject</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject['id'] }}">{{ subject['name'] }}</option>
+                    {% endfor %}
+                </select>
+
+                <label>Exam date</label>
+                <input type="date" name="exam_date" required>
+
+                <button class="primary">+ Add Exam</button>
+            </form>
+
+            <div class="exam-list">
+                {% for exam in exams %}
+                <div class="exam-item">
+                    <div>
+                        <strong>{{ exam['title'] }}</strong>
+                        <small>{{ exam['subject_name'] or 'Subject' }}</small>
+                    </div>
+                    <span>{{ exam['exam_date'] }}</span>
+                </div>
+                {% else %}
+                <p class="muted">No upcoming exams added.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </section>
+
+    <section class="content-grid">
+
+        <div class="panel" id="insights">
+            <span class="eyebrow">SMART RECOMMENDATIONS</span>
+            <h2>✦ AI Study Insights</h2>
+            <p class="muted">Personalized study suggestions based on your subjects.</p>
+
+            <div class="insight-list">
+                {% for tip in recommendations %}
+                <div class="insight-item">
+                    <span>✦</span>
+                    <p>{{ tip }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <small class="muted">Current recommendations use rule-based logic, not a connected generative AI model.</small>
+        </div>
+
+        <div class="panel" id="settings">
+            <span class="eyebrow">PERSONALIZATION</span>
+            <h2>Study Preferences</h2>
+
+            <form method="post" action="{{ url_for('settings') }}"
+                  class="form-stack">
+                <label>Daily study hours</label>
+                <input type="number" name="study_hours"
+                       min="1" max="10"
+                       value="{{ settings['study_hours'] }}" required>
+
+                <label>Start time</label>
+                <input type="time" name="start_time"
+                       value="{{ settings['start_time'] }}" required>
+
+                <label>End time</label>
+                <input type="time" name="end_time"
+                       value="{{ settings['end_time'] }}" required>
+
+                <button class="primary">Save Preferences</button>
+            </form>
+        </div>
+
+    </section>
+
+    <footer class="dashboard-footer">
+        <p>✦ SmartStudy AI Pro</p>
+        <small>Study smarter. Achieve more.</small>
+    </footer>
+
 </div>
-<section class="panel preferences"><div class="panel-head"><div><div class="eyebrow">MAKE IT YOURS</div><h3>Study preferences</h3></div></div><form method="post" action="{{ url_for('settings') }}" class="settings-form"><label>Start time<input type="time" name="start_time" value="17:00"></label><label>End time<input type="time" name="end_time" value="21:00"></label><label>Session length<select name="session_length"><option>25</option><option selected>45</option><option>60</option><option>90</option></select></label><label>Break (min)<select name="break_length"><option>5</option><option selected>10</option><option>15</option></select></label><div class="days"><span>Study days</span>{% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}<label><input type="checkbox" name="study_days" value="{{ d }}" {% if d!='Sun' %}checked{% endif %}>{{ d }}</label>{% endfor %}</div><button class="primary">Save preferences</button></form></section>
-<footer class="footer">SMARTSTUDY AI <span>Built for focused learning · v2.0</span></footer>
+
 {% endblock %}
