@@ -1,2 +1,85 @@
-{% extends "base.html" %}{% block content %}<div class="auth-wrap"><div class="auth-card"><div class="brand auth-brand"><span class="brand-icon">✦</span><span>SmartStudy <em>AI</em></span></div><div class="eyebrow">YOUR PERSONAL ACADEMIC COPILOT</div><h1>{{ 'Welcome back' if mode=='login' else 'Create your account' }}</h1><p class="muted">{{ 'Sign in to continue your learning journey.' if mode=='login' else 'Build a smarter, more balanced study routine.' }}</p>
-<form method="post" class="form-stack">{% if mode=='register' %}<label>Full name<input name="name" placeholder="Your name" required></label>{% endif %}<label>Email address<input type="email" name="email" placeholder="you@example.com" required></label><label>Password<input type="password" name="password" minlength="8" placeholder="At least 8 characters" required></label><button class="primary full">{{ 'Sign in' if mode=='login' else 'Create account' }} <span>→</span></button></form><p class="auth-switch">{% if mode=='login' %}New here? <a href="{{ url_for('register') }}">Create an account</a>{% else %}Already registered? <a href="{{ url_for('login') }}">Sign in</a>{% endif %}</p><div class="secure-note">⌑ Your account data is stored locally in this app's SQLite database.</div></div></div>{% endblock %}
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            <div class="brand-icon">✦</div>
+            <h2>SmartStudy <span>AI PRO</span></h2>
+        </div>
+
+        <div class="eyebrow">YOUR PERSONAL ACADEMIC COPILOT</div>
+
+        <h1>
+            {{ 'Welcome back!' if mode == 'login' else 'Create your account' }}
+        </h1>
+
+        <p class="muted">
+            {{ 'Sign in and continue your learning journey.' if mode == 'login' else 'Start building a smarter study routine today.' }}
+        </p>
+
+        <form method="post" class="form-stack">
+
+            {% if mode == 'register' %}
+            <label>
+                Full Name
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required
+                >
+            </label>
+            {% endif %}
+
+            <label>
+                Email Address
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    required
+                >
+            </label>
+
+            <label>
+                Password
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    minlength="8"
+                    required
+                >
+            </label>
+
+            <button type="submit" class="primary full">
+                {{ 'Sign In' if mode == 'login' else 'Create Account' }}
+                <span>→</span>
+            </button>
+
+        </form>
+
+        <div class="auth-switch">
+            {% if mode == 'login' %}
+                Don't have an account?
+                <a href="{{ url_for('register') }}">Create Account</a>
+            {% else %}
+                Already have an account?
+                <a href="{{ url_for('login') }}">Sign In</a>
+            {% endif %}
+        </div>
+
+        <div class="secure-note">
+            🔒 Your account is protected with password hashing.
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
